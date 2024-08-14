@@ -1,0 +1,42 @@
+language: node_js
+node_js:
+  - '6'
+
+env:
+  global:
+    - BUILD_DIR=$TRAVIS_BUILD_DIR
+    - CHANGED_THEMES="theme_budgetdirect theme_bupa theme_kogan theme_travelassociates"
+
+cache:
+  bundler: true
+  directories:
+    - "$HOME/.npm"
+
+before_script:
+  - npm install -g bower gulp-cli yarn
+
+script:
+  - |
+    for THEME in $CHANGED_THEMES; do
+        cd ${BUILD_DIR}/$THEME && npm install && gulp
+    done
+    cd ${BUILD_DIR}
+
+before_deploy:
+  - git config --local user.name "Echo J"
+  - git config --local user.email "echoj0201@gmail.com"
+
+deploy:
+  - provider: script
+    script: bash ${BUILD_DIR}/scripts/build_branch.sh $TRAVIS_BRANCH $CHANGED_THEMES
+    skip_cleanup: true
+    on:
+      tags: false
+      all_branches: true
+
+  - provider: script
+    script: bash ${BUILD_DIR}/scripts/build_tag.sh $TRAVIS_TAG $CHANGED_THEMES
+    skip_cleanup: true
+    on:
+      tags: true
+      all_branches: false
